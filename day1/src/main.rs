@@ -14,23 +14,22 @@ fn main() -> Result<()> {
 
     let mut set = HashSet::new();
     let mut sum = 0;
-    let mut did_sum = false;
-    let mut found = false;
+    let mut round = 0;
+    let mut dup = false;
 
-    while !found {
+    while !dup {
+        round += 1;
         let file = File::open(&input_file)?;
         for line in BufReader::new(file).lines() {
             let x: i32 = line.unwrap().parse().unwrap();
             sum += x;
-            if !set.insert(sum) {
-                println!("Failed to insert {}", sum);
-                found = true;
-                break;
+            if !(set.insert(sum) || dup) {
+                println!("First duplicate frequency is {}", sum);
+                dup = true;
             }
         }
-        if !did_sum {
+        if round == 1 {
             println!("Total: {}", sum);
-            did_sum = true;
         }
     }
 
