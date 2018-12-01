@@ -14,16 +14,25 @@ fn main() -> Result<()> {
 
     let mut set = HashSet::new();
     let mut sum = 0;
+    let mut did_sum = false;
+    let mut found = false;
 
-    let file = File::open(input_file)?;
-    for line in BufReader::new(file).lines() {
-        let x: i32 = line.unwrap().parse().unwrap();
-        sum += x;
-        println!("current sum: {}", sum);
-        if !set.insert(sum) {
-            println!("Failed to insert {}", sum);
+    while !found {
+        let file = File::open(&input_file)?;
+        for line in BufReader::new(file).lines() {
+            let x: i32 = line.unwrap().parse().unwrap();
+            sum += x;
+            if !set.insert(sum) {
+                println!("Failed to insert {}", sum);
+                found = true;
+                break;
+            }
+        }
+        if !did_sum {
+            println!("Total: {}", sum);
+            did_sum = true;
         }
     }
-    println!("{}", sum);
+
     Ok(())
 }
