@@ -1,7 +1,5 @@
-use clap::clap_app;
 use std::collections::HashMap;
-use std::fs::File;
-use std::io::{BufRead, BufReader, Result};
+use utils::*;
 
 fn has_n_chars(s: &str, n: u32) -> bool {
     let mut v = HashMap::with_capacity(26);
@@ -57,18 +55,10 @@ fn common(s1: &str, s2: &str) -> String {
         .collect()
 }
 
-fn main() -> Result<()> {
-    let input_file: String = clap_app!(day2 =>
-                                (@arg INPUT: +required "What file has the input.")
-    )
-    .get_matches()
-    .value_of("INPUT")
-    .unwrap()
-    .into();
+fn main() {
+    let input_file: String = get_input("day2");
 
-    let file = File::open(&input_file)?;
-    let ids: Vec<(String, usize)> = BufReader::new(file)
-        .lines()
+    let ids: Vec<(String, usize)> = read_lines(&input_file)
         .filter_map(|l| has_2_or_3_same(&l.unwrap()))
         .collect();
 
@@ -98,6 +88,4 @@ fn main() -> Result<()> {
             }
         }
     }
-
-    Ok(())
 }
