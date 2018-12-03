@@ -4,7 +4,6 @@ use std::collections::{HashMap, HashSet};
 use std::fmt::{self, Display};
 use utils::*;
 
-#[derive(Debug, Hash, PartialOrd, PartialEq, Eq, Clone, Copy)]
 struct Claim {
     pub id: u32,
     xrange: (u32, u32),
@@ -62,11 +61,11 @@ fn main() {
     let file = read_file(&input);
 
     let mut cloth_map: HashMap<(u32, u32), HashSet<u32>> = HashMap::new(); // coordinates to IDs
-    let mut claim_map: HashMap<u32, Claim> = HashMap::new();
+    let mut singles: HashSet<u32> = HashSet::new();
 
     for entry in file.lines() {
         let claim = Claim::new(&entry.unwrap());
-        claim_map.insert(claim.id, claim.clone());
+        let _ = singles.insert(claim.id);
 
         for x in claim.startx()..claim.endx() {
             for y in claim.starty()..claim.endy() {
@@ -78,32 +77,21 @@ fn main() {
         }
     }
 
-    let mut singles: HashSet<u32> = HashSet::new();
-
     let tot: u32 = cloth_map
         .values()
         .map(|s| match s.len() {
-            x if x > 1 => 1,
-            1 => {
+            x if x > 1 => {
                 for id in s.iter() {
-                    singles.insert(*id);
+                    let _ = singles.remove(id);
                 }
-                0
+                1
             }
             _ => 0,
         })
         .sum();
     println!("Found {} square inches multiply-claimed.", tot);
 
-    'claim: for id in singles.iter() {
-        let claim = claim_map.get(id).unwrap();
-        for x in claim.startx()..claim.endx() {
-            for y in claim.starty()..claim.endy() {
-                if cloth_map.get(&(x, y)).unwrap().len() > 1 {
-                    continue 'claim;
-                }
-            }
-        }
-        println!("Only {} made it through intact.", claim)
+    for id in singles.iter() {
+        println!("Only {} made it through intact.", id);
     }
 }
