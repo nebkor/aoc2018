@@ -1,19 +1,15 @@
 use clap::clap_app;
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Result};
 
-fn c2i(c: char) -> usize {
-    let a: u32 = 'a' as u32;
-    (c as u32 - a) as usize
-}
-
 fn has_n_chars(s: &str, n: u32) -> bool {
-    let mut v: Vec<u32> = vec![0; 26];
+    let mut v = HashMap::with_capacity(26);
     for c in s.chars() {
-        let i = c2i(c);
-        v[i] = v[i] + 1;
+        let count = v.entry(c).or_insert(0);
+        *count += 1;
     }
-    for c in v.iter() {
+    for c in v.values() {
         if n == *c {
             return true;
         }
@@ -92,8 +88,8 @@ fn main() -> Result<()> {
 
     println!("3s: {}, 2s: {}, 3s * 2s = {}", threes, twos, threes * twos);
 
-    for i in 0..ids.len() {
-        let base = &ids[i].0;
+    for (i, v) in ids.iter().enumerate() {
+        let base = &v.0;
         for s in ids[i..].iter() {
             if hamming(base, &s.0) == 1 {
                 {
