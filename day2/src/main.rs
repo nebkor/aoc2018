@@ -58,7 +58,8 @@ fn common(s1: &str, s2: &str) -> String {
 fn main() {
     let input_file: String = get_input("day2");
 
-    let ids: Vec<(String, usize)> = read_lines(&input_file)
+    let ids: Vec<(String, usize)> = read_file(&input_file)
+        .lines()
         .filter_map(|l| has_2_or_3_same(&l.unwrap()))
         .collect();
 

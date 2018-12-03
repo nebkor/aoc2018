@@ -1,6 +1,7 @@
 use clap::{App, Arg};
 use std::fs::File;
-use std::io::{BufRead, BufReader};
+pub use std::io::BufRead;
+use std::io::BufReader;
 
 pub fn get_input(app_name: &str) -> String {
     App::new(app_name)
@@ -16,9 +17,9 @@ pub fn get_input(app_name: &str) -> String {
         .into()
 }
 
-pub fn read_lines(filename: &str) -> std::io::Lines<BufReader<File>> {
+pub fn read_file(filename: &str) -> BufReader<File> {
     let file = File::open(filename).expect("Couldn't open input file.");
-    BufReader::new(file).lines()
+    BufReader::new(file)
 }
 
 #[cfg(test)]
