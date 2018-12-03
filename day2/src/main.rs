@@ -21,6 +21,28 @@ fn has_n_chars(s: &str, n: u32) -> bool {
     false
 }
 
+fn has_2_or_3_same(s: &str) -> Option<(String, usize)> {
+    let mut two = 1;
+    let mut three = 1;
+    let mut has_2_or_3 = false;
+
+    if has_n_chars(s, 2) {
+        two = 2;
+        has_2_or_3 = true;
+    }
+
+    if has_n_chars(s, 3) {
+        three = 3;
+        has_2_or_3 = true;
+    }
+
+    if has_2_or_3 {
+        Some((s.to_owned(), two * three))
+    } else {
+        None
+    }
+}
+
 fn hamming(s1: &str, s2: &str) -> usize {
     let ret: usize = s1
         .chars()
@@ -49,24 +71,34 @@ fn main() -> Result<()> {
     .into();
 
     let file = File::open(&input_file)?;
-    let lines: Vec<String> = BufReader::new(file).lines().map(|l| l.unwrap()).collect();
+    let ids: Vec<(String, usize)> = BufReader::new(file)
+        .lines()
+        .filter_map(|l| has_2_or_3_same(&l.unwrap()))
+        .collect();
 
-    let lines2: Vec<_> = lines.iter().filter(|x| has_n_chars(x, 2)).collect();
-    let twos = lines2.len();
-
-    let mut lines3: Vec<_> = lines.iter().filter(|x| has_n_chars(x, 3)).collect();
-    let threes = lines3.len();
-
-    lines3.extend(lines2.into_iter());
+    let mut twos = 0;
+    let mut threes = 0;
+    for id in ids.iter() {
+        match id.1 {
+            2 => twos += 1,
+            3 => threes += 1,
+            6 => {
+                twos += 1;
+                threes += 1
+            }
+            _ => (),
+        }
+    }
 
     println!("3s: {}, 2s: {}, 3s * 2s = {}", threes, twos, threes * twos);
 
-    for i in 0..lines3.len() {
-        let base = lines3[i];
-        for s in lines3[i..].iter() {
-            match hamming(base, s) {
-                1 => println!("{}", common(s, base)),
-                _ => (),
+    for i in 0..ids.len() {
+        let base = &ids[i].0;
+        for s in ids[i..].iter() {
+            if hamming(base, &s.0) == 1 {
+                {
+                    println!("{}", common(&s.0, base))
+                }
             }
         }
     }
