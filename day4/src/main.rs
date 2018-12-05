@@ -3,9 +3,7 @@ use chrono::Duration;
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::collections::HashMap;
-//use utils::*;
 
-//type DateTime = chrono::DateTime<Utc>;
 type Id = u32;
 
 const DSTRING: &str = "%Y-%m-%d %H:%M";
@@ -16,7 +14,7 @@ fn main() {
         static ref SLEEPS: Regex = Regex::new(r"\[(.*)\] falls asleep").unwrap();
         static ref WAKES: Regex = Regex::new(r"\[(.*)\] wakes up").unwrap();
     }
-    let ONE_MINUTE: Duration = Duration::minutes(1);
+    let one_minute: Duration = Duration::minutes(1);
 
     let input = include_str!("../input");
 
@@ -39,19 +37,30 @@ fn main() {
             let mut t = start_sleep.clone();
             while t != end {
                 let minute: u32 = t.format("%M").to_string().parse().unwrap();
-                let mut v = sleeps.entry(id).or_insert(HashMap::new());
-                *(v.entry(minute).or_insert(0)) += 1;
-                t = t.checked_add_signed(ONE_MINUTE).unwrap();
+                *sleeps
+                    .entry(id)
+                    .or_insert(HashMap::new())
+                    .entry(minute)
+                    .or_insert(0) += 1;
+                t = t.checked_add_signed(one_minute).unwrap();
             }
         }
     }
 
     let mut max_sleep = 0;
     let mut big_sleeper = 0;
+    let mut most_sleepy_minute = 0;
+    let mut minute_guard = 0;
+    let mut max_count = 0;
     for (k, v) in sleeps.iter() {
         let mut s = 0;
-        for c in v.values() {
+        for (m, c) in v.iter() {
             s += c;
+            if *c > max_count {
+                max_count = *c;
+                most_sleepy_minute = *m;
+                minute_guard = *k;
+            }
         }
         if s > max_sleep {
             max_sleep = s;
@@ -75,5 +84,12 @@ fn main() {
         big_sleeper,
         sleepiest_minute,
         big_sleeper * sleepiest_minute
+    );
+
+    println!(
+        "Guard {} sleeps at minute {} more than any other guard. Checksum is {}.",
+        minute_guard,
+        most_sleepy_minute,
+        minute_guard * most_sleepy_minute
     );
 }
