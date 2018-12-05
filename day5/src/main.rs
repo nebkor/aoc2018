@@ -20,7 +20,7 @@ fn react(polymer: String) -> String {
 
         input = input.drain_filter(|x| *x != '_' as u8).collect();
     }
-    (&(String::from_utf8(input).unwrap())).trim().to_owned()
+    String::from_utf8(input).unwrap().trim().to_owned()
 }
 
 fn fstring(input: String, c: char) -> String {
@@ -29,7 +29,7 @@ fn fstring(input: String, c: char) -> String {
     let s = b
         .drain_filter(|x| (*x as char).to_ascii_lowercase() != c)
         .collect();
-    (&(String::from_utf8(s).unwrap())).trim().to_owned()
+    String::from_utf8(s).unwrap().trim().to_owned()
 }
 
 fn main() {
