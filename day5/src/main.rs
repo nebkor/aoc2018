@@ -1,8 +1,7 @@
 #![feature(drain_filter)]
 
-fn main() {
-    let mut input = include_str!("../input").to_owned().into_bytes();
-
+fn react(polymer: String) -> String {
+    let mut input = polymer.into_bytes();
     let mut prev_len = input.len() + 1;
 
     while input.len() < prev_len {
@@ -15,17 +14,44 @@ fn main() {
             if (pv - cv).abs() == 32 {
                 input[pi] = '_' as u8;
                 input[i] = '_' as u8;
-                // println!(
-                //     "Marking positions {},{} with {},{} for removal.",
-                //     pi, i, pv as u8 as char, cv as u8 as char
-                // );
             }
             pi = i;
         }
 
         input = input.drain_filter(|x| *x != '_' as u8).collect();
     }
+    (&(String::from_utf8(input).unwrap())).trim().to_owned()
+}
 
-    let input = (&(String::from_utf8(input).unwrap())).trim().to_owned();
-    println!("There are {} units left after fully reacting.", input.len());
+fn fstring(input: String, c: char) -> String {
+    let mut b = input.into_bytes();
+
+    let s = b
+        .drain_filter(|x| (*x as char).to_ascii_lowercase() != c)
+        .collect();
+    (&(String::from_utf8(s).unwrap())).trim().to_owned()
+}
+
+fn main() {
+    let input = include_str!("../input").to_owned();
+
+    // part 1
+    let reacted = react(input.clone());
+    println!(
+        "There are {} units left after fully reacting.",
+        reacted.len()
+    );
+
+    // part 2
+    let mut min_len = input.len();
+    for c in "abcdefghijklmnopqrstuvwxyz".chars() {
+        let short = fstring(input.clone(), c);
+
+        let tlen = react(short).len();
+        if tlen < min_len {
+            min_len = tlen;
+        }
+    }
+
+    println!("Min polymer possible is {}", min_len);
 }
