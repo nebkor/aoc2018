@@ -26,10 +26,12 @@ fn main() {
     for line in input.lines() {
         if let Some(start) = GUARD.captures(line) {
             id = start[2].parse().unwrap();
+            continue;
         }
 
         if let Some(sleep) = SLEEPS.captures(line) {
             start_sleep = Utc.datetime_from_str(&sleep[1], DSTRING).unwrap();
+            continue;
         }
 
         if let Some(wake) = WAKES.captures(line) {
