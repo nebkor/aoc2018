@@ -1,8 +1,17 @@
 use std::collections::HashMap;
 use std::i32::{MAX, MIN};
+use std::ops::Sub;
 
 #[derive(Clone, Copy, Eq, PartialEq, Hash)]
 struct Pin(i32, i32);
+
+// Manhattan distance method
+impl Sub for Pin {
+    type Output = u32;
+    fn sub(self, rhs: Self) -> u32 {
+        ((self.0 - rhs.0).abs() + (self.1 - rhs.1).abs()) as u32
+    }
+}
 
 type Weight = (i32, Pin); // each coordinate has a distance to a pin
 
@@ -79,5 +88,22 @@ fn main() {
 
     let max = areas.values().max().unwrap_or(&666);
 
-    println!("Max area is {}", max);
+    // part 1
+    println!("Max vornoi area is {}", max);
+
+    let mut safe_count = 0;
+    for x in grid.upper_left.0..grid.lower_right.0 {
+        for y in grid.upper_left.1..grid.lower_right.1 {
+            let g = Pin(x, y);
+            let mut d = 0;
+            for p in input.iter() {
+                d += g - *p;
+            }
+            if d < 10_000 {
+                safe_count += 1;
+            }
+        }
+    }
+    // part 2
+    println!("The safe area is {}", safe_count);
 }
