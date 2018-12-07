@@ -4,7 +4,7 @@ use std::i32::{MAX, MIN};
 #[derive(Clone, Copy, Eq, PartialEq, Hash)]
 struct Pin(i32, i32);
 
-type Weight = (u32, Pin); // each coordinate has a distance to a pin
+type Weight = (i32, Pin); // each coordinate has a distance to a pin
 
 struct Grid {
     pub upper_left: Pin,
@@ -36,7 +36,9 @@ fn main() {
         })
         .collect();
 
-    let mut pins: HashMap<Pin, Weight> = HashMap::new();
+    let mut grid_weights: HashMap<Pin, Weight> = HashMap::new();
+
+    let mut areas: HashMap<Pin, u32> = HashMap::new();
 
     let mut lx = MAX;
     let mut ly = MAX;
@@ -51,4 +53,31 @@ fn main() {
     }
 
     let grid = Grid::new(Pin(lx, ly), Pin(rx, ry));
+
+    for p in input.iter() {
+        for x in grid.upper_left.0..grid.lower_right.0 {
+            for y in grid.upper_left.1..grid.lower_right.1 {
+                let dx = (x - p.0).abs();
+                let dy = (y - p.1).abs();
+
+                let weight = (dx + dy, *p);
+                let w = grid_weights.entry(Pin(x, y)).or_insert(weight);
+                if w.0 > weight.0 {
+                    *w = weight;
+                }
+            }
+        }
+    }
+
+    for weight in grid_weights.values() {
+        let pin = weight.1;
+
+        if grid.is_finite(&pin) {
+            *areas.entry(pin).or_insert(0) += 1;
+        }
+    }
+
+    let max = areas.values().max().unwrap_or(&666);
+
+    println!("Max area is {}", max);
 }
