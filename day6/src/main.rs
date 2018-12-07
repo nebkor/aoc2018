@@ -7,9 +7,9 @@ struct Pin(i32, i32);
 
 // Manhattan distance method
 impl Sub for Pin {
-    type Output = u32;
-    fn sub(self, rhs: Self) -> u32 {
-        ((self.0 - rhs.0).abs() + (self.1 - rhs.1).abs()) as u32
+    type Output = i32;
+    fn sub(self, rhs: Self) -> i32 {
+        (self.0 - rhs.0).abs() + (self.1 - rhs.1).abs()
     }
 }
 
@@ -64,12 +64,10 @@ fn main() {
     let grid = Grid::new(Pin(lx, ly), Pin(rx, ry));
 
     for p in input.iter() {
-        for x in grid.upper_left.0..grid.lower_right.0 {
-            for y in grid.upper_left.1..grid.lower_right.1 {
-                let dx = (x - p.0).abs();
-                let dy = (y - p.1).abs();
-
-                let weight = (dx + dy, *p);
+        for x in lx..rx {
+            for y in ly..ry {
+                let g = Pin(x, y);
+                let weight = (*p - g, *p);
                 let w = grid_weights.entry(Pin(x, y)).or_insert(weight);
                 if w.0 > weight.0 {
                     *w = weight;
@@ -92,8 +90,8 @@ fn main() {
     println!("Max vornoi area is {}", max);
 
     let mut safe_count = 0;
-    for x in grid.upper_left.0..grid.lower_right.0 {
-        for y in grid.upper_left.1..grid.lower_right.1 {
+    for x in lx..rx {
+        for y in ly..ry {
             let g = Pin(x, y);
             let mut d = 0;
             for p in input.iter() {
