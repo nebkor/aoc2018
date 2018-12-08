@@ -30,7 +30,41 @@ impl AddAssign<&Node> for u32 {
 }
 
 fn parse(input: &Vec<u32>) -> HashMap<usize, Node> {
-    unimplemented!()
+    let mut nodes = HashMap::new();
+
+    let mut stack: Vec<usize> = Vec::with_capacity(input.len());
+
+    let mut reading_md = false;
+    let mut id: usize = 0;
+
+    for (k, v) in input.iter().enumerate() {
+        if stack.is_empty() {
+            stack.push(k);
+        }
+
+        if let Some(cid) = stack.pop() {
+            id = cid;
+            nodes.entry(id).or_insert(Node::new());
+            let num_children = input[id];
+            let num_meta = input[id + 1];
+
+            if k >= id + 2 && k < id + 2 + num_meta as usize && num_children == 0 {
+                reading_md = true;
+            } else {
+                reading_md = false;
+            }
+
+            if reading_md {
+                nodes.entry(id).and_modify(|n| n.md.push(*v));
+            }
+
+            if !(reading_md || k == id + 1) {
+                stack.push(k)
+            }
+        }
+    }
+
+    nodes
 }
 
 fn main() {
@@ -39,7 +73,7 @@ fn main() {
         .flat_map(|n| n.parse::<u32>())
         .collect();
 
-    let nodes: HashMap<usize, Node> = parse(&input);
+    let nodes = parse(&input);
 
     let mut tot = 0;
     for node in nodes.values() {
