@@ -17,10 +17,14 @@ impl PartialOrd for Step {
     }
 }
 
+fn secs(c: &char) -> u32 {
+    1 + (*c as u8 - 'A' as u8) as u32
+}
+
 fn main() {
     let r_e: Regex = Regex::new(r"Step ([A-Z]{1}) [a-z ]* ([A-Z]{1})").unwrap();
 
-    let mut todo: BinaryHeap<Step> = BinaryHeap::new();
+    let mut ready_at: HashMap<u32, BinaryHeap<Step>> = HashMap::new();
     let mut done: Vec<char> = Vec::with_capacity(26);
     let mut upstreams: HashMap<char, HashSet<char>> = HashMap::new();
     let mut downstreams: HashMap<char, HashSet<char>> = HashMap::new();
@@ -47,28 +51,45 @@ fn main() {
 
     for k in upstreams.keys() {
         if !downstreams.contains_key(k) {
-            todo.push(Step(*k));
+            ready_at
+                .entry(60 + secs(k))
+                .or_insert(BinaryHeap::new())
+                .push(Step(*k));
         }
     }
 
-    while !todo.is_empty() {
-        let cur = todo.pop().unwrap().0;
-        done.push(cur);
-
-        if let Some(deps) = upstreams.remove(&cur) {
-            for d in deps.iter() {
-                downstreams.entry(*d).and_modify(|x| {
-                    x.remove(&cur);
-                });
-                if let Some(ent) = downstreams.get(d) {
-                    if ent.len() < 1 {
-                        downstreams.remove(&d);
-                        todo.push(Step(*d));
+    let mut t = 0;
+    while !ready_at.is_empty() {
+        t += 1;
+        if let Some(ready) = ready_at.remove(&t) {
+            for chunk in ready.iter().map(|x| *x).collect::<Vec<Step>>().chunks(5) {
+                for c in chunk.iter() {
+                    let c = c.0;
+                    done.push(c);
+                    if let Some(deps) = upstreams.remove(&c) {
+                        for d in deps.iter() {
+                            downstreams.entry(*d).and_modify(|x| {
+                                x.remove(&c);
+                            });
+                            if let Some(ent) = downstreams.get(d) {
+                                if ent.len() < 1 {
+                                    downstreams.remove(&d);
+                                    ready_at
+                                        .entry(t + 60 + secs(d))
+                                        .or_insert(BinaryHeap::new())
+                                        .push(Step(*d));
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
     }
 
-    println!("{}", done.iter().collect::<String>());
+    println!(
+        "doing steps {} took {} seconds",
+        done.iter().collect::<String>(),
+        t
+    );
 }
