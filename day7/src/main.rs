@@ -49,12 +49,16 @@ fn main() {
             .insert(pre_req);
     }
 
-    for k in upstreams.keys() {
-        if !downstreams.contains_key(k) {
-            ready_at
-                .entry(60 + secs(k))
-                .or_insert(BinaryHeap::new())
-                .push(Step(*k));
+    {
+        let mut w = 0;
+        for k in upstreams.keys() {
+            if !downstreams.contains_key(k) {
+                w += 1;
+                ready_at
+                    .entry((w / 5) * 60 + 60 + secs(k))
+                    .or_insert(BinaryHeap::new())
+                    .push(Step(*k));
+            }
         }
     }
 
