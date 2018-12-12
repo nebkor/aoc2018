@@ -5,6 +5,7 @@ use std::ops::{Add, AddAssign};
 struct Node {
     pub children: Vec<usize>,
     pub md: Vec<u32>,
+    pub parent: Option<usize>,
 }
 
 impl Node {
@@ -12,6 +13,7 @@ impl Node {
         Node {
             children: Vec::new(),
             md: Vec::new(),
+            parent: None,
         }
     }
 }
