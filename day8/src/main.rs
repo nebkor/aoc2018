@@ -22,9 +22,9 @@ impl Add for Node {
     }
 }
 
-impl Add<Node> for u32 {
+impl Add<&Node> for u32 {
     type Output = u32;
-    fn add(self, rhs: Node) -> u32 {
+    fn add(self, rhs: &Node) -> u32 {
         self + rhs.md.iter().sum::<u32>()
     }
 }
@@ -50,13 +50,7 @@ fn parse(input: &mut impl Iterator<Item = u32>) -> Node {
 }
 
 fn sum_md(node: &Node) -> u32 {
-    let mut tot = 0;
-    tot += node;
-    for c in node.children.iter() {
-        tot += sum_md(c);
-    }
-
-    tot
+    node.children.iter().map(sum_md).sum::<u32>() + node
 }
 
 fn main() {
