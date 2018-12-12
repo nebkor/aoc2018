@@ -1,11 +1,9 @@
-use std::collections::HashMap;
 use std::ops::{Add, AddAssign};
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 struct Node {
-    pub children: Vec<usize>,
+    pub children: Vec<Node>,
     pub md: Vec<u32>,
-    pub parent: Option<usize>,
 }
 
 impl Node {
@@ -13,7 +11,6 @@ impl Node {
         Node {
             children: Vec::new(),
             md: Vec::new(),
-            parent: None,
         }
     }
 }
@@ -25,48 +22,41 @@ impl Add for Node {
     }
 }
 
+impl Add<Node> for u32 {
+    type Output = u32;
+    fn add(self, rhs: Node) -> u32 {
+        self + rhs.md.iter().sum::<u32>()
+    }
+}
+
 impl AddAssign<&Node> for u32 {
     fn add_assign(&mut self, rhs: &Node) {
         *self = *self + rhs.md.iter().sum::<u32>();
     }
 }
 
-fn parse(input: &Vec<u32>) -> HashMap<usize, Node> {
-    let mut nodes = HashMap::new();
+fn parse(input: &mut impl Iterator<Item = u32>) -> Node {
+    let nc: u32 = input.next().unwrap();
+    let nmd: u32 = input.next().unwrap();
 
-    let mut stack: Vec<usize> = Vec::with_capacity(input.len());
-
-    let mut reading_md = false;
-    let mut id: usize = 0;
-
-    for (k, v) in input.iter().enumerate() {
-        if stack.is_empty() {
-            stack.push(k);
-        }
-
-        if let Some(cid) = stack.pop() {
-            id = cid;
-            nodes.entry(id).or_insert(Node::new());
-            let num_children = input[id];
-            let num_meta = input[id + 1];
-
-            if k >= id + 2 && k < id + 2 + num_meta as usize && num_children == 0 {
-                reading_md = true;
-            } else {
-                reading_md = false;
-            }
-
-            if reading_md {
-                nodes.entry(id).and_modify(|n| n.md.push(*v));
-            }
-
-            if !(reading_md || k == id + 1) {
-                stack.push(k)
-            }
-        }
+    let mut node = Node::new();
+    for _ in 0..nc {
+        node.children.push(parse(input));
     }
 
-    nodes
+    node.md = input.take(nmd as usize).collect();
+
+    node
+}
+
+fn sum_md(node: &Node) -> u32 {
+    let mut tot = 0;
+    tot += node;
+    for c in node.children.iter() {
+        tot += sum_md(c);
+    }
+
+    tot
 }
 
 fn main() {
@@ -75,12 +65,9 @@ fn main() {
         .flat_map(|n| n.parse::<u32>())
         .collect();
 
-    let nodes = parse(&input);
+    let nodes = parse(&mut input.into_iter());
 
-    let mut tot = 0;
-    for node in nodes.values() {
-        tot += node;
-    }
+    let tot: u32 = sum_md(&nodes);
 
     println!("checksum: {}", tot);
 }
