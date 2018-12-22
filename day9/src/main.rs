@@ -1,4 +1,28 @@
 use clap::{App, Arg};
+use std::collections::VecDeque;
+
+trait Rotate {
+    fn rotate(&mut self, rot: isize);
+}
+
+impl Rotate for VecDeque<usize> {
+    fn rotate(&mut self, rot: isize) {
+        if rot == 0 || self.len() == 0 {
+            return;
+        }
+        if rot > 0 {
+            for _ in 0..rot {
+                let t = self.pop_front().expect("rotation error");
+                self.push_back(t);
+            }
+        } else {
+            for _ in 0..rot.abs() {
+                let t = self.pop_back().expect("rotation error");
+                self.push_front(t);
+            }
+        }
+    }
+}
 
 pub fn get_input() -> (usize, usize) {
     let matches = App::new("day9")
@@ -30,53 +54,23 @@ pub fn get_input() -> (usize, usize) {
     )
 }
 
-fn get_index(index: isize, size: usize) -> usize {
-    if size == 0 {
-        return 0;
-    }
-    match index.signum() {
-        0 => 0,
-        1 => index as usize % size,
-        _ => size - (index.abs() as usize % size),
-    }
-}
-
 fn main() {
     let (num_players, num_marbles) = get_input();
 
-    let marbs = 0..num_marbles;
+    let marbs = 0..num_marbles + 1;
     let elves = 0..num_players;
 
-    let mut ring: Vec<usize> = Vec::with_capacity(num_marbles);
+    let mut ring: VecDeque<usize> = VecDeque::with_capacity(num_marbles);
     let mut scores: Vec<usize> = vec![0; num_players];
 
-    let mut cur: isize = 0;
     for (marble, elf) in marbs.zip(elves.cycle()) {
-        match ring.len() {
-            0 => {
-                ring.push(marble);
-                cur = 0;
-            }
-            1 => {
-                ring.push(marble);
-                cur = 1;
-            }
-            2 => {
-                ring.insert(1, marble);
-                cur = 1;
-            }
-            _ => {
-                if marble % 23 == 0 {
-                    scores[elf] += marble;
-                    let remove = get_index(cur - 7, ring.len());
-                    scores[elf] += ring.remove(remove);
-                    cur = remove as isize;
-                } else {
-                    let insert = get_index(cur + 2, ring.len());
-                    ring.insert(insert, marble);
-                    cur = insert as isize;
-                }
-            }
+        if marble % 23 == 0 && marble != 0 {
+            scores[elf] += marble;
+            ring.rotate(-7);
+            scores[elf] += ring.pop_front().unwrap();
+        } else {
+            ring.rotate(2);
+            ring.push_front(marble);
         }
     }
 
