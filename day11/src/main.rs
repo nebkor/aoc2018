@@ -3,7 +3,7 @@ use clap::{App, Arg};
 use std::collections::BinaryHeap;
 
 type P = (i32, i32);
-type Grid = BinaryHeap<(i32, P)>; // power-level, point
+type Grid = BinaryHeap<(i32, P, i32)>; // power-level, point
 
 pub fn get_input(app_name: &str) -> i32 {
     App::new(app_name)
@@ -32,10 +32,10 @@ fn cell_power(serial: i32, cell: P) -> i32 {
     get_hundos(pl) - 5
 }
 
-fn square_power(id: P, serial: i32) -> i32 {
+fn square_power(id: P, size: i32, serial: i32) -> i32 {
     let mut ret: i32 = 0;
-    for y in id.1..=(id.1 + 2) {
-        for x in id.0..=(id.0 + 2) {
+    for y in id.1..=(id.1 + size) {
+        for x in id.0..=(id.0 + size) {
             ret += cell_power(serial, (x, y));
         }
     }
@@ -48,15 +48,17 @@ fn main() {
 
     let mut grid = Grid::new();
 
-    for y in 1..=298 {
-        for x in 1..=298 {
-            let xy = (x, y);
-            let pl = square_power(xy, serial);
-            grid.push((pl, xy));
+    for s in 1..301 {
+        for y in 1..(300 - s) {
+            for x in 1..(300 - s) {
+                let xy = (x, y);
+                let pl = square_power(xy, s, serial);
+                grid.push((pl, xy, s));
+            }
         }
     }
 
-    let (pl, id) = grid.pop().unwrap();
+    let (pl, id, s) = grid.pop().unwrap();
 
-    println!("Grid {:?} has {} power", id, pl);
+    println!("Grid {},{},{} has {} power", id.0, id.1, s, pl);
 }
