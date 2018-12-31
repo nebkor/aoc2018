@@ -34,8 +34,8 @@ fn cell_power(serial: i32, cell: P) -> i32 {
 
 fn square_power(id: P, size: i32, serial: i32) -> i32 {
     let mut ret: i32 = 0;
-    for y in id.1..=(id.1 + size) {
-        for x in id.0..=(id.0 + size) {
+    for y in id.1..(id.1 + size) {
+        for x in id.0..(id.0 + size) {
             ret += cell_power(serial, (x, y));
         }
     }
@@ -48,9 +48,9 @@ fn main() {
 
     let mut grid = Grid::new();
 
-    for s in 1..301 {
-        for y in 1..(300 - s) {
-            for x in 1..(300 - s) {
+    for s in 1..=20 {
+        for y in 1..=(300 - s) {
+            for x in 1..=(300 - s) {
                 let xy = (x, y);
                 let pl = square_power(xy, s, serial);
                 grid.push((pl, xy, s));
