@@ -46,15 +46,26 @@ fn square_power(id: P, size: i32, serial: i32) -> i32 {
 fn main() {
     let serial = get_input("day11");
 
-    let mut grid = Grid::new();
+    let mut grid = Grid::with_capacity(2);
 
-    for s in 1..=20 {
+    for s in 1..=300 {
+        let mut brk = true;
         for y in 1..=(300 - s) {
             for x in 1..=(300 - s) {
                 let xy = (x, y);
                 let pl = square_power(xy, s, serial);
-                grid.push((pl, xy, s));
+                brk = brk && pl < 0;
+                if let Some((po, _, _)) = grid.peek() {
+                    if *po < pl {
+                        grid.push((pl, xy, s));
+                    }
+                } else {
+                    grid.push((pl, xy, s));
+                }
             }
+        }
+        if brk {
+            break;
         }
     }
 
