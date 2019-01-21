@@ -2,7 +2,6 @@ use lazy_static::lazy_static;
 use regex::Regex;
 
 use std::collections::{HashMap, VecDeque};
-use std::str::from_utf8;
 
 type Rules = HashMap<Vec<bool>, bool>;
 type Pots = VecDeque<bool>;
@@ -38,14 +37,70 @@ fn beginning(cur: &Pots, idx: usize, rules: &Rules, new: &mut Pots) -> isize {
         if let Some(&pot) = rules.get(&p) {
             new.push_back(pot);
         } else {
-            new.push_back(false);
+            new.push_back(cur[pos]);
         }
     }
 
     negs
 }
 
-fn ending(cur: &Pots, start_from: usize, rules: &Rules, new: &mut Pots) {}
+fn ending(cur: &Pots, start_from: usize, rules: &Rules, new: &mut Pots) {
+    let mut last_pot_checked = start_from + 3;
+    let clen = cur.len();
+    while last_pot_checked < clen {
+        let leftc = cur
+            .iter()
+            .skip(last_pot_checked - 2)
+            .take(3)
+            .map(|b| *b)
+            .collect::<Vec<bool>>();
+        let rightmost = last_pot_checked + 2;
+        if rightmost >= clen {
+            let fill = (rightmost - clen) + 1;
+            let pat = leftc
+                .iter()
+                .chain(vec![false; fill].iter())
+                .map(|b| *b)
+                .collect::<Vec<bool>>();
+            if let Some(pot) = rules.get(&pat) {
+                new.push_back(*pot);
+            } else {
+                new.push_back(cur[last_pot_checked]);
+            }
+        } else {
+            let pat = leftc
+                .iter()
+                .chain(cur.iter().skip(last_pot_checked + 1).take(2))
+                .map(|b| *b)
+                .collect::<Vec<bool>>();
+            if let Some(pot) = rules.get(&pat) {
+                new.push_back(*pot);
+            } else {
+                new.push_back(cur[last_pot_checked])
+            }
+        }
+        last_pot_checked += 1;
+    }
+    let left = cur
+        .iter()
+        .skip(last_pot_checked - 1)
+        .take(2)
+        .map(|b| *b)
+        .collect::<Vec<bool>>();
+    let cright = vec![false; 3];
+
+    let pat = left
+        .iter()
+        .chain(cright.iter())
+        .map(|b| *b)
+        .collect::<Vec<bool>>();
+
+    if let Some(pot) = rules.get(&pat) {
+        if *pot {
+            new.push_back(true);
+        }
+    }
+}
 
 fn main() {
     lazy_static! {
@@ -88,18 +143,17 @@ fn main() {
             if i < 2 {
                 negs += beginning(&cur, i, &rules, &mut new);
             }
-            tot_negs += negs;
+
             // we're in the middle now
             if let Some(pot) = rules.get(w) {
                 new.push_back(*pot);
             } else {
-                new.push_back(false);
+                new.push_back(cur[i + 2]);
             }
         }
+        tot_negs += negs;
 
         ending(&cur, end, &rules, &mut new);
-
-        cur = new;
 
         println!(
             "{}{}",
@@ -109,6 +163,8 @@ fn main() {
                 .collect::<Vec<_>>()
                 .join("")
         );
+
+        cur = new;
     }
 
     let part_1_answer: isize = cur
@@ -116,4 +172,6 @@ fn main() {
         .enumerate()
         .map(|(i, b)| if *b { i as isize - tot_negs } else { 0 })
         .sum();
+
+    println!("Part 1: {}", part_1_answer);
 }
