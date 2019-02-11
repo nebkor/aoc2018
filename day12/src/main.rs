@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 type Rules = HashMap<String, char>;
 
-fn beginning(cur: &str, new: &mut String, rules: &Rules, leftest: &mut isize, idx: usize) {
+fn beginning(cur: &str, idx: usize) {
     if idx != 0 {
         return;
     }
