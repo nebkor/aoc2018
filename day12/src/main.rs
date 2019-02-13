@@ -5,71 +5,37 @@ use std::collections::HashMap;
 
 type Rules = HashMap<String, char>;
 
-fn beginning(cur: &str, idx: usize) {
-    if idx != 0 {
-        return;
+fn get_neighbors(pots: &str, idx: isize) -> (String, String) {
+    let last = pots.len() - 1;
+    let penult = last - 1;
+
+    match idx {
+        -2 => (String::from(".."), [".", &pots[0..1]].concat()),
+        -1 => (String::from(".."), String::from(&pots[0..2])),
+        0 => (String::from(".."), String::from(&pots[1..3])),
+        1 => ([".", &pots[0..1]].concat(), String::from(&pots[2..4])),
+        x if x == penult as isize => (
+            String::from(&pots[((idx as usize) - 2)..idx as usize]),
+            [&pots[last..], "."].concat(),
+        ),
+        x if x == last as isize => (
+            String::from(&pots[(idx as usize - 2)..idx as usize]),
+            String::from(".."),
+        ),
+        x if x == last as isize + 2 => ([&pots[last..], "."].concat(), String::from("..")),
+        x if x == last as isize + 1 => (String::from(&pots[penult..]), String::from("..")),
+        _ => (
+            String::from(&pots[((idx as usize) - 2)..idx as usize]),
+            String::from(&pots[((idx as usize) + 1)..((idx as usize) + 3)]),
+        ),
     }
-    let mut nleft: isize = 0;
-    for neg in 1..=2 {
-        let r = match neg {
-            1 => ["...", &cur[0..2]].concat().to_owned(),
-            2 => ["....", &cur[0..1]].concat().to_owned(),
-            _ => unreachable!(),
-        };
-
-        if let Some(&p) = rules.get(&r) {
-            new.insert(0, p);
-            if p == '#' {
-                nleft = neg as isize;
-            }
-        }
-    }
-
-    let mut first_plant = -1;
-
-    for pot in 0..2 {
-        let r = match pot {
-            0 => ["..", &cur[0..3]].concat().to_owned(),
-            1 => [".", &cur[0..4]].concat().to_owned(),
-            _ => unreachable!(),
-        };
-
-        if let Some(&p) = rules.get(&r) {
-            new.push(p);
-            if p == '#' {
-                first_plant = pot;
-            }
-            if nleft == 0 && p == '.' && first_plant < 0 {
-                *leftest += 1;
-            }
-        }
-    }
-
-    *leftest -= nleft;
-
-    dbg!(&new);
-
-    //dbg!(leftest);
 }
 
-fn ending(cur: &str, new: &mut String, rules: &Rules, idx: usize) {
-    if idx != cur.len() - 2 {
-        return;
-    }
-
-    for i in 0..4 {
-        let r = match i {
-            0 => [&cur[(idx - 2)..(idx + 2)], "."].concat().to_owned(),
-            1 => [&cur[(idx - 1)..(idx + 2)], ".."].concat().to_owned(),
-            2 => [&cur[idx..(idx + 2)], "..."].concat().to_owned(),
-            3 => [&cur[(idx + 1)..], "...."].concat().to_owned(),
-            _ => return,
-        };
-
-        if let Some(&pot) = rules.get(&r) {
-            new.push(pot);
-            println!("{}: {}, {}\n{}", i, &r, pot, cur);
-        }
+fn check_pot(pots: &str, idx: isize) -> char {
+    if idx < 0 || idx >= pots.len() as isize {
+        '.'
+    } else {
+        pots.chars().nth(idx as usize).unwrap()
     }
 }
 
@@ -96,36 +62,42 @@ fn main() {
     }
 
     let mut leftmost: isize = 0;
-    for _ in 0..20 {
+    let mut old_psum: isize = 0;
+    let mut delta_sum: isize = 0;
+    for gen in 0.. {
+        let psum: isize = cur
+            .chars()
+            .enumerate()
+            .map(|(i, p)| if p == '#' { i as isize + leftmost } else { 0 })
+            .sum();
+        //println!("{}: {} {}", gen, psum, cur);
+        let nd = psum - old_psum;
+        if nd == delta_sum {
+            println!(
+                "generation {}, last dyn val: {}, delta: {}",
+                gen, old_psum, nd
+            );
+        }
+        delta_sum = nd;
+        old_psum = psum;
+
         let clen = cur.len();
         let mut new = String::with_capacity(clen + 5);
-        for (i, _p) in cur.chars().enumerate() {
-            if i < 2 {
-                beginning(&cur, &mut new, &rules, &mut leftmost, i);
-                continue;
-            }
 
-            if i < clen - 2 {
-                // we're in the middle now
-                let r = &cur[(i - 2)..(i + 3)];
-
-                if let Some(&pot) = rules.get(r) {
-                    new.push(pot);
-                }
-            } else {
-                ending(&cur, &mut new, &rules, i);
+        for i in -2..(clen + 2) as isize {
+            let (lefts, rights) = get_neighbors(&cur, i);
+            let pot = check_pot(&cur, i);
+            let r = [lefts, pot.to_string(), rights].concat();
+            if let Some(&newpot) = rules.get(&r) {
+                new.push(newpot);
             }
         }
 
+        if let Some(first_plant) = new.find('#') {
+            let delta: isize = first_plant as isize - 2;
+            leftmost += delta;
+        }
+
         cur = new.trim_matches('.').to_owned();
-        //println!("{}{}", vec![" "; (12 + leftmost) as usize].concat(), cur);
     }
-
-    let part_1_answer: isize = cur
-        .chars()
-        .enumerate()
-        .map(|(i, b)| if b == '#' { i as isize + leftmost } else { 0 })
-        .sum();
-
-    println!("Part 1: {}", part_1_answer);
 }
