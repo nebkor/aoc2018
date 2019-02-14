@@ -5,11 +5,11 @@ use std::collections::HashMap;
 
 type Rules = HashMap<String, char>;
 
-fn get_neighbors(pots: &str, idx: isize) -> (String, String) {
+fn get_neighborhood(pots: &str, idx: isize) -> String {
     let last = pots.len() - 1;
     let penult = last - 1;
 
-    match idx {
+    let (lefts, rights) = match idx {
         -2 => (String::from(".."), [".", &pots[0..1]].concat()),
         -1 => (String::from(".."), String::from(&pots[0..2])),
         0 => (String::from(".."), String::from(&pots[1..3])),
@@ -22,21 +22,22 @@ fn get_neighbors(pots: &str, idx: isize) -> (String, String) {
             String::from(&pots[(idx as usize - 2)..idx as usize]),
             String::from(".."),
         ),
-        x if x == last as isize + 2 => ([&pots[last..], "."].concat(), String::from("..")),
         x if x == last as isize + 1 => (String::from(&pots[penult..]), String::from("..")),
+        x if x == last as isize + 2 => ([&pots[last..], "."].concat(), String::from("..")),
         _ => (
             String::from(&pots[((idx as usize) - 2)..idx as usize]),
             String::from(&pots[((idx as usize) + 1)..((idx as usize) + 3)]),
         ),
-    }
-}
+    };
 
-fn check_pot(pots: &str, idx: isize) -> char {
-    if idx < 0 || idx >= pots.len() as isize {
+    let pot = (if idx < 0 {
         '.'
     } else {
-        pots.chars().nth(idx as usize).unwrap()
-    }
+        pots.chars().nth(idx as usize).unwrap_or('.')
+    })
+    .to_string();
+
+    [lefts, pot, rights].concat()
 }
 
 fn main() {
@@ -85,9 +86,7 @@ fn main() {
         let mut new = String::with_capacity(clen + 5);
 
         for i in -2..(clen + 2) as isize {
-            let (lefts, rights) = get_neighbors(&cur, i);
-            let pot = check_pot(&cur, i);
-            let r = [lefts, pot.to_string(), rights].concat();
+            let r = get_neighborhood(&cur, i);
             if let Some(&newpot) = rules.get(&r) {
                 new.push(newpot);
             }
